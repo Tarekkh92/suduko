@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sudoku Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    .game-container {
+      width: 450px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 2px solid #333;
+      border-radius: 5px;
+      height:500px
+    }
+
+    .row {
+      display: flex;
+      margin-bottom: -1px;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      text-align: center;
+      font-size: 16px;
+      line-height: 40px;
+      border: 1px solid #ccc;
+    }
+
+    .cell input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .fixed {
+      background-color: #f5f5f5;
+    }
+
+    .horizontal-line {
+    /*   border-top: 2px solid #333;
+      margin-top: -1px;
+      margin-bottom: -1px; */
+    }
+
+    .vertical-line {
+      border-left: 2px solid #333;
+      margin-left: -1px;
+      margin-right: -1px;
+    }
+
+    .button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 16px;
+      background-color: #4CAF50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+
+    .button:active {
+      background-color: #3e8e41;
+    }
+
+    .message {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #333;
+      text-align: center;
+    }
+   .center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* height: 200px; */
+  /* border: 3px solid green; */ 
+}
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <h1>Sudoku Game</h1>
+    <div id="game-grid"></div>
+    
+    
+    <div class="center">
+    <button id="submit-button" class="button">Submit</button>
+    </div>
+    
+    <div id="message" class="message"></div>
+  </div>
+
+  <script>
+    const gameGrid = document.getElementById('game-grid');
+   
+    	const submitButton = document.getElementById('submit-button');
+   
+    
+    const message = document.getElementById('message');
+    const cells = [];
+
+    // Create the Sudoku grid
+    for (let i = 0; i < 9; i++) {
+      const row = document.createElement('div');
+      row.classList.add('row');
+      if (i % 3 === 0 && i !== 0) {
+        row.classList.add('horizontal-line');
+      }
+
+      for (let j = 0; j < 9; j++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        if (j % 3 === 0 && j !== 0) {
+          cell.classList.add('vertical-line');
+        }
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.maxLength = '1';
+
+        cell.appendChild(input);
+        row.appendChild(cell);
+
+        cells.push(input);
+      }
+
+      gameGrid.appendChild(row);
+    }
+
+    // Function to generate a random number between min and max (inclusive)
+    function getRandomNumber(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Function to generate a random Sudoku puzzle
+    function generateRandomSudoku() {
+      const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+      // Shuffle the numbers array
+      for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+      }
+
+      // Assign random numbers to some cells
+      for (let i = 0; i < cells.length; i++) {
+        if (getRandomNumber(0, 1) === 0) {
+          const cell = cells[i];
+          const number = numbers[i % 9];
+          cell.value = number;
+          cell.setAttribute('readonly', true);
+          cell.classList.add('fixed');
+        }
+      }
+    }
+
+    // Function to check if the Sudoku is solved
+    function isSudokuSolved() {
+      // Get the current values from the cells
+      const values = cells.map((cell) => Number(cell.value));
+
+      // Check if any cell is empty or contains an invalid value
+      if (values.includes(NaN) || values.includes(0)) {
+        return false;
+      }
+
+      // Check each row, column, and box
+      for (let i = 0; i < 9; i++) {
+        const row = values.slice(i * 9, (i + 1) * 9);
+        const column = values.filter((_, index) => index % 9 === i);
+        const boxStartRow = Math.floor(i / 3) * 3;
+        const boxStartCol = (i % 3) * 3;
+        const box = values.filter(
+          (_, index) =>
+            Math.floor(index / 9) >= boxStartRow &&
+            Math.floor(index / 9) < boxStartRow + 3 &&
+            (index % 9) >= boxStartCol &&
+            (index % 9) < boxStartCol + 3
+        );
+
+        if (
+          hasDuplicates(row) ||
+          hasDuplicates(column) ||
+          hasDuplicates(box)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    // Function to check if an array has duplicates
+    function hasDuplicates(array) {
+      const values = new Set();
+
+      for (const element of array) {
+        if (values.has(element)) {
+          return true;
+        }
+        values.add(element);
+      }
+
+      return false;
+    }
+
+    // Function to handle the submit button click event
+    function handleSubmit() {
+      if (isSudokuSolved()) {
+        message.textContent = 'Congratulations! You solved the Sudoku!';
+      } else {
+        message.textContent = 'Sorry, the Sudoku is not solved yet.';
+      }
+    }
+
+    // Add event listener to the submit button
+    submitButton.addEventListener('click', handleSubmit);
+
+    // Generate a random Sudoku puzzle at the start
+    generateRandomSudoku();
+  </script>
+</body>
+</html>
